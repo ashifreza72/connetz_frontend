@@ -60,6 +60,7 @@ import ResetPassword from "../pages/ResetPassword";
 import Integration from "../pages/Integration";
 import Subscription from "../pages/Subscription";
 import Billing from "../pages/Billing";
+import ClientDetails from "../pages/ClientDetails";
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
@@ -94,6 +95,12 @@ const AppRoutes = () => {
     <Route path="/integration" element={<Integration />} />
     <Route path="/subscription" element={<Subscription />} />
     <Route path="/billing" element={<Billing />} />
+    {/* <Route path="/clients/:id" element={<ClientDetails />} /> */}
+    {/* <Route path="/clients/:clientId" element={<ClientDetails />} /> */}
+    <Route path="/client-details" element={<ClientDetails />} />
+
+
+
   </Route>
 
   {/* Smart root redirect */}
@@ -102,7 +109,7 @@ const AppRoutes = () => {
   {/* Catch-all */}
   <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
 </Routes>
-  
+
   );
 };
 

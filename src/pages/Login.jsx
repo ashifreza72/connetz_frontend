@@ -26,10 +26,12 @@ const Login = () => {
     
   // Save data for use in other components (like Clients.jsx)
   localStorage.setItem("token", data.token);               
-  localStorage.setItem("user_id", data.user_id);           
+  // localStorage.setItem("user", data.user);    
+  localStorage.setItem("user", JSON.stringify(data.user));
+  localStorage.setItem("user_id", data.session.user_id);           
   localStorage.setItem("user_type", data.user_type);       
 
-   
+   console.log('user',data.user);  
 
   Swal.fire({
     icon: "success",

@@ -5,6 +5,7 @@ import { Search, Filter, ChevronDown } from 'lucide-react';
  import addIcon from '../assets/images/add-book-icon.png';  
  import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { FaPhoneSlash, FaSnowflake } from "react-icons/fa";
  
 
  
@@ -51,7 +52,15 @@ const Clients = () => {
 // console.log(user_id)
    
       if (!token) {
-        Swal.fire("Unauthorized", "Please login again.", "warning");
+        // Swal.fire("Unauthorized", "Please login again.", "warning");
+         Swal.fire({
+    title: "Unauthorized",
+    text: "Please login again.",
+    icon: "warning",
+    customClass: {
+      confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
+    },
+  });
         return;
       }
 
@@ -77,10 +86,26 @@ const Clients = () => {
         setClients(clientList);
         setCurrentPage(1);
       } else {
-        Swal.fire("Error", data.message || "Failed to fetch clients", "error");
+        // Swal.fire("Error", data.message || "Failed to fetch clients", "error")
+         Swal.fire({
+    title: "Unauthorized",
+    text: "Please login again.",
+    icon: "warning",
+    customClass: {
+      confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
+    },
+  });
       }
     } catch (err) {
-      Swal.fire("Error", "Network error. Please try again later.", "error");
+      // Swal.fire("Error", "Network error. Please try again later.", "error");
+       Swal.fire({
+    title: "Unauthorized",
+    text: "Please login again.",
+    icon: "warning",
+    customClass: {
+      confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
+    },
+  });
     } finally {
       setLoading(false);
     }
@@ -89,6 +114,17 @@ const Clients = () => {
   fetchClients();
 }, [activeTab, user, authLoading]);  
 
+
+const stringToColor = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = "#" + ((hash >> 24) & 0xFF).toString(16).padStart(2, '0') +
+                       ((hash >> 16) & 0xFF).toString(16).padStart(2, '0') +
+                       ((hash >> 8) & 0xFF).toString(16).padStart(2, '0');
+  return color;
+};
 
  
 
@@ -152,14 +188,12 @@ const handleRowClick = (client) => {
         <h1 className="text-2xl font-bold">Clients</h1>
       
        <button
-  onClick={() => setModalOpen(true)}
-  className="bg-[#164ec8] hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-3xl shadow-[0_4px_12px_rgba(115,103,240,0.5)] flex items-center gap-2"
->
-  <img src={addIcon} alt="Add" className="w-5 h-5" />
-  ADD CLIENT
-</button>
-
-
+          onClick={() => setModalOpen(true)}
+          className="bg-[#164ec8] hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-3xl shadow-[0_4px_12px_rgba(115,103,240,0.5)] flex items-center gap-2"
+          >
+          <img src={addIcon} alt="Add" className="w-5 h-5" />
+          ADD CLIENT
+        </button>
       </div>
 
       {/* 📋 Custom Table */}
@@ -282,34 +316,83 @@ const handleRowClick = (client) => {
               className="hover:bg-gray-100 bg-white cursor-pointer transition-all duration-200 shadow-[inset_0_0_0_9999px_var(--tw-bg-opacity)]"
             >
 
-            <td className="px-6 py-[0.252rem] text-[.9375rem] text-black font-semibold border-b flex text-center items-center whitespace-nowrap">
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                alt="avatar"
-                className="w-8 h-8 rounded-full mr-3"
-              />
+            {/* <td className="px-6 py-[0.252rem] text-[.9375rem] text-black font-semibold border-b flex items-center whitespace-nowrap">
+              <div
+                className={`w-8 h-8 rounded-full mr-3 flex items-center justify-center text-white font-bold`}
+                style={{
+                  backgroundColor: stringToColor(client.name || "-"),
+                }}
+              >
+                {client.name ? client.name.charAt(0).toUpperCase() : "-"}
+              </div>
               {client.name || "-"}
-            </td>
-            <td className="px-5 py-[0.252rem] text-[.9375rem] text-black font-semibold border-b max-w-[300px] truncate">
-              {client.campaign?.length > 100
-                ? client.campaign.slice(0, 100) + "..."
-                : client.campaign || "-"}
-            </td>
-              <td className="px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap">
-                {client.date
-                  ? new Date(client.date).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                    })
-                  : "-"}
-              </td>
-              <td className="px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap">
-                {client.created_at
-                  ? new Date(client.created_at).toLocaleString(undefined, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })
-                  : "-"}
-              </td>
+            </td> */}
+
+          <td
+  className={`px-6 py-[0.252rem] text-[.9375rem] font-semibold border-b flex items-center whitespace-nowrap`}
+>
+  <div
+    className={`w-8 h-8 rounded-full mr-3 flex items-center justify-center text-white font-bold`}
+    style={{
+      backgroundColor:
+        client.is_contacted === "false"
+          ? "#ec4899" // Tailwind's pink-500 hex
+          : stringToColor(client.name || "-"),
+    }}
+  >
+    {client.is_contacted === "false" ? (
+      <FaPhoneSlash className="text-white text-sm" />
+      // <FaSnowflake  className="text-white text-sm" />
+    ) : (
+      client.name?.charAt(0).toUpperCase()
+    )}
+  </div>
+  <span
+    className={`${
+      client.is_contacted === "false" ? "text-pink-500" : "text-black"
+    }`}
+  >
+    {client.name || "-"}
+  </span>
+</td>
+
+
+
+            <td
+  className={`px-5 py-[0.252rem] text-[.9375rem] text-black font-semibold border-b max-w-[300px] truncate ${
+    client.is_contacted === "false" ? "text-pink-500" : "bg-white"
+  }`}
+>
+  {client.campaign?.length > 100
+    ? client.campaign.slice(0, 100) + "..."
+    : client.campaign || "-"}
+</td>
+
+<td
+  className={`px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap ${
+    client.is_contacted === "false" ? "text-pink-500" : "bg-white"
+  }`}
+>
+  {client.date
+    ? new Date(client.date).toLocaleString(undefined, {
+        dateStyle: "medium",
+      })
+    : "-"}
+</td>
+
+<td
+  className={`px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap ${
+    client.is_contacted === "false" ? "text-pink-500" : "bg-white"
+  }`}
+>
+  {client.created_at
+    ? new Date(client.created_at).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "-"}
+</td>
+
             </tr>
            ))}
           </tbody>

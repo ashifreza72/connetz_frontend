@@ -48,33 +48,34 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const { logout } = useAuth();
 
-  const handleLogout = async () => {
-    
-    try {
-      const response = await fetch("http://192.168.1.57:8000/api/logout", {
-        method: "POST",
-        headers: {
+  const navLogout = async () => {
+  console.log("Logout response:", navLogout);
+  try {
+    const response = await fetch("http://192.168.1.57:8000/api/logout", {
+      method: "POST",
+     headers: {
           "Content-Type": "application/json",
+          'XF-token': localStorage.getItem("token"),
+          'user_id': localStorage.getItem("user_id"),
           Authorization: localStorage.getItem("token"),
         },
-      });
+    });
 
-      if (response.ok) {
-        logout();  
-           Navigate("/login");
-window.location.reload();
-        Swal.fire("Logged out!", "See you again!", "success");
-      } else {
-        console.error("Logout API failed");
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
+    if (response.ok) {
+      logout(); // clear context + localStorage
+      Swal.fire("Logged out!", "See you again!", "success");
+      Navigate("/login"); // ✅ Correct redirection
+    } else {
+      console.error("Logout API failed");
     }
-  };
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+};
+
 
 
   return (
-    
     <aside
       className={`
         fixed top-0 left-0 h-full w-64 bg-white shadow-md p-4 z-40 transform
@@ -97,33 +98,28 @@ window.location.reload();
           
           {/* Logo */}
          <div className="flex justify-start items-start ml-3 font-bold text-[2.9375rem] mb-8 gap-2">
-  <img src={logo} alt="Logo" className="h-10" />
-  
-</div>
-
-
-
+            <img src={logo} alt="Logo" className="h-10" />
+          </div>
           {/* Main Menu */}
           <nav className="flex flex-col gap-2 text-[15px] text-[#384551]">
-      <NavItem
-        icon={<FaHome className="text-[15px]" />}
-        label="Dashboards"
-        to="/"
-        end
-      />
+            <NavItem
+              icon={<FaHome className="text-[15px]" />}
+              label="Dashboard"
+              to="/dashboard"
+            />
 
-      {/* Team with subitems */}
-      <div>
-        <button
-          onClick={() => setIsTeamOpen(!isTeamOpen)}
-          className="flex items-center justify-between w-full px-3 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[15px] min-h-[2.625rem]"
-        >
-          <span className="flex items-center gap-3">
-            <FaUsers className="text-[15px]" />
-            <span>Team</span>
-          </span>
-          {isTeamOpen ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
-        </button>
+          {/* Team with subitems */}
+          <div>
+            <button
+              onClick={() => setIsTeamOpen(!isTeamOpen)}
+              className="flex items-center justify-between w-full px-3 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[15px] min-h-[2.625rem]"
+            >
+              <span className="flex items-center gap-3">
+                <FaUsers className="text-[15px]" />
+                <span>Team</span>
+              </span>
+              {isTeamOpen ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
+            </button>
 
         {isTeamOpen && (
           <div className="ml-1 mt-1 flex flex-col gap-1 text-[15px] text-[#384551]">
@@ -186,9 +182,9 @@ window.location.reload();
             <NavItem icon={<FaQuestionCircle />} label="User Guide" to="/guide" />
             <NavItem icon={<FaComments />} label="Live Chat Support" to="/support" />
            <NavItem
-              onClick={handleLogout}
+              onClick={navLogout}
               icon={<FaSignOutAlt />}
-              label="Log Out"
+              label="LogOut"
               to="/login"
               className="w-full text-sm font-semibold bg-[#7367F0] text-white py-2 rounded-lg shadow-[0_4px_12px_rgba(115,103,240,0.5)] hover:shadow-[0_6px_16px_rgba(115,103,240,0.6)] transition-shadow"
            />
@@ -204,7 +200,6 @@ window.location.reload();
 const NavItem = ({ icon, label, to, noIcon = false, end=false}) => (
   <NavLink
     to={to}
-    end={end}
     className={({ isActive }) =>
       `flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer text-[.9375rem] ${
         isActive ? "bg-indigo-100 text-blue-600 font-medium" : "hover:bg-gray-100 text-[#384551]"

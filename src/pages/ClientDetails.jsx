@@ -40,6 +40,27 @@ const getSourceIcon = (source) => {
   }
 };
 
+const stringToColor = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = "#" + ((hash >> 24) & 0xFF).toString(16).padStart(2, '0') +
+                       ((hash >> 16) & 0xFF).toString(16).padStart(2, '0') +
+                       ((hash >> 8) & 0xFF).toString(16).padStart(2, '0');
+  return color;
+};
+
+
+const getInitials = (name) => {
+  if (!name) return "-";
+  const parts = name.trim().split(" ");
+  const first = parts[0]?.charAt(0).toUpperCase() || "";
+  const last = parts[1]?.charAt(0).toUpperCase() || "";
+  return first + last;
+};
+
+
 const ClientDetails = () => {
   const [client, setClient] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -74,8 +95,6 @@ const ClientDetails = () => {
 } catch (err) {
   console.error("Failed to fetch client details:", err);
 }
-
-
     };
 
     if (clientId) {
@@ -92,7 +111,7 @@ const ClientDetails = () => {
   if (!client) return <div className="text-center p-10">Loading...</div>;
   return (
     <>
-    <DashboardHeader user={{ name: "John Doe", role: "Admin", avatar: "" }} />
+    {/* <DashboardHeader user={{ name: "John Doe", role: "Admin", avatar: "" }} /> */}
     <div className="px-1 mx-12 2xl:mx-auto">
            <div className="flex justify-between items-center mt-4 mb-6">
                 <h1 className="text-2xl font-bold">{client.name}</h1>
@@ -100,8 +119,6 @@ const ClientDetails = () => {
                     <a href="/" className="text-[#164ec8] hover:underline">Home</a> &gt; Client Info
                 </span>
              </div>
-
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Section */}
                 <div className="lg:col-span-2 space-y-6">
@@ -110,17 +127,33 @@ const ClientDetails = () => {
                 <h2 className="text-lg font-semibold mb-4">Client Info</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                    <img
-                        src={client.avatar}
-                        alt="avatar"
-                        className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                        <div className="text-sm text-gray-500">Display Name</div>
-                        <div className="font-medium text-gray-900">{client.name}</div>
-                    </div>
-                    </div>
+                    {/* <div className="flex items-center space-x-4">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-lg"
+                    style={{ backgroundColor: stringToColor(client.name || "-") }}
+                  >
+                    {client.name ? client.name.charAt(0).toUpperCase() : "-"}
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Display Name</div>
+                    <div className="font-medium text-gray-900">{client.name}</div>
+                  </div>
+                </div> */}
+
+                <div className="flex items-center space-x-4">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                    style={{ backgroundColor: stringToColor(client.name || "-") }}
+                  >
+                    {getInitials(client.name)}
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Display Name</div>
+                    <div className="font-medium text-gray-900">{client.name}</div>
+                  </div>
+                </div>
+
+
                     <div className="flex items-center space-x-4">
                     <FaPhoneAlt className="text-[#164ec8]" />
                     <div>

@@ -14,7 +14,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_BASE_API}/api/login`, {
+      const res = await fetch(`${process.env.REACT_APP_BASE_API}/api/login`, {  
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -26,6 +26,8 @@ const Login = () => {
     
   // Save data for use in other components (like Clients.jsx)
   localStorage.setItem("token", data.token);               
+  localStorage.setItem("XF-session-token",data.session.session_token);  
+               
   // localStorage.setItem("user", data.user);    
   localStorage.setItem("user", JSON.stringify(data.user));
   localStorage.setItem("user_id", data.session.user_id);           
@@ -40,7 +42,7 @@ const Login = () => {
      customClass: {
     confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
   },
-    timer: 1500,
+    // timer: 1500,
     showConfirmButton: false,
   });
 

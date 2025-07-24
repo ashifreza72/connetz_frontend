@@ -49,7 +49,7 @@ const Clients = () => {
       const user_type = localStorage.getItem("user_type");
       const userData = JSON.parse(localStorage.getItem("user"));
       const user_id = userData?.id
-// console.log(user_id)
+    // console.log(user_id)
    
       if (!token) {
         // Swal.fire("Unauthorized", "Please login again.", "warning");
@@ -149,9 +149,10 @@ const handleRowClick = (client) => {
 
   const tabs = [
     { id: 1, label: "All Clients" },
-    { id: 2, label: "Uncontacted" },
-    { id: 3, label: "Follow Ups" },
-    { id: 4, label: "Recently Viewed Content" },
+    { id: 2, label: "UnDailed" },
+    { id: 3, label: "Overdue" },
+    { id: 4, label: "Today Appointment" },
+    { id: 5, label: "Follow Ups" },
   ];
 
   const filters = ['All', 'Active', 'Inactive', 'New'];
@@ -316,17 +317,7 @@ const handleRowClick = (client) => {
               className="hover:bg-gray-100 bg-white cursor-pointer transition-all duration-200 shadow-[inset_0_0_0_9999px_var(--tw-bg-opacity)]"
             >
 
-            {/* <td className="px-6 py-[0.252rem] text-[.9375rem] text-black font-semibold border-b flex items-center whitespace-nowrap">
-              <div
-                className={`w-8 h-8 rounded-full mr-3 flex items-center justify-center text-white font-bold`}
-                style={{
-                  backgroundColor: stringToColor(client.name || "-"),
-                }}
-              >
-                {client.name ? client.name.charAt(0).toUpperCase() : "-"}
-              </div>
-              {client.name || "-"}
-            </td> */}
+          
 
           <td
   className={`px-6 py-[0.252rem] text-[.9375rem] font-semibold border-b flex items-center whitespace-nowrap`}

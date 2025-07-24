@@ -44,18 +44,31 @@ const DashboardHeader = () => {
     try {
       const response = await fetch("http://192.168.1.57:8000/api/logout", {
         method: "POST",
-        headers: {
+         headers: {
           "Content-Type": "application/json",
           'XF-token': localStorage.getItem("token"),
           'user_id': localStorage.getItem("user_id"),
+           'user_type': localStorage.getItem("user_type"),
+           'XF-session-token': localStorage.getItem("XF-session-token"),
+              
           Authorization: localStorage.getItem("token"),
         },
       });
 
       if (response.ok) {
-        // ✅ Clear localStorage and redirect
+        //  Clear localStorage and redirect
         localStorage.clear();
         Swal.fire("Logged out!", "See you again!", "success");
+        Swal.fire({
+                      icon: "success",
+                      title: "Logged out!",
+                      text: "See you again!",
+                       customClass: {
+                      confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
+                    },
+                      // timer: 1500,
+                      showConfirmButton: true,
+                    });
 
         // Redirect to login
         navigate("/login");

@@ -1,120 +1,76 @@
-// import React, { createContext, useContext, useState } from "react";
-
-// const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-
-//   const login = (userData) => {
-//     setUser(userData);
-//     localStorage.setItem("user", JSON.stringify(userData));
-//   };
-
-//   const logout = () => {
-//     setUser(null);
-//     localStorage.removeItem("user");
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ user, login, logout }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
-
-
-
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); //  Add loading state
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
+      try {
       setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+        localStorage.removeItem("user");
+      }
     }
-    setLoading(false); // Set loading to false after user check
+    setLoading(false);
   }, []);
-  
 
   const login = (userData) => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("user_type");
-      
-    setUser(null);
-    Navigate("/login");
-     localStorage.removeItem("user");
+  const logout = async () => {
+    try {
+      const response = await fetch("http://192.168.1.57:8000/api/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'XF-token': localStorage.getItem("token"),
+          'user_id': localStorage.getItem("user_id"),
+          'user_type': localStorage.getItem("user_type"),
+          'XF-session-token': localStorage.getItem("XF-session-token"),
+          Authorization: localStorage.getItem("token"),
+        },
+      });
+
+      // Clear all auth-related items from localStorage
       localStorage.clear();
-      console.log("User logged out",logout);
+      
+      // Clear the user state
+    setUser(null);
+
+      // Navigate to login page
+      navigate("/login");
+
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still clear everything even if the API call fails
+      localStorage.clear();
+      setUser(null);
+      navigate("/login");
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout,loading}}>
-      {children}
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
 
-
-
-//------------------------------------------- sir
-
-//  import React, { createContext, useContext, useEffect, useState } from "react";
-
-// const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const storedUser = localStorage.getItem("user");
-//     if (storedUser) {
-//       setUser(JSON.parse(storedUser));
-//     }
-//     setLoading(false);
-//   }, []);
-
-//   const login = (userData) => {
-//     setUser(userData);
-//     localStorage.setItem("user", JSON.stringify(userData));
-//   };
-
-//   const logout = () => {
-//     // Clear all auth-related items from localStorage
-//     localStorage.removeItem("user");
-//     localStorage.removeItem("token");
-//     localStorage.removeItem("user_id");
-//     localStorage.removeItem("user_type");
-    
-//     // Clear the in-memory state
-//     setUser(null);
-    
-//     // NOTE: The redirection to /login must happen in the component that calls logout.
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ user, login, logout, loading }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
+export default AuthContext;
  

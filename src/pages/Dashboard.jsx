@@ -11,8 +11,9 @@ const user = {
 const Dashboard = () => {
   return (
     <div className="flex flex-col min-h-screen">
-      <DashboardHeader user={user} />
-      <main className="p-2">
+     
+      <main className="p-1">
+         <DashboardHeader user={user} />
         {/* Dashboard Content Here */}
         <Clients />
        

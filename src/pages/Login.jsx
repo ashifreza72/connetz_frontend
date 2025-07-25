@@ -14,7 +14,9 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_BASE_API}/api/login`, {  
+      // Use a fallback URL if environment variable is not set
+      const baseUrl = process.env.REACT_APP_BASE_API || 'http://192.168.1.57:8000';
+      const res = await fetch(`${baseUrl}/api/login`, {  
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -23,17 +25,15 @@ const Login = () => {
       const data = await res.json();
    
       if (res.ok) {
-    
-  // Save data for use in other components (like Clients.jsx)
-  localStorage.setItem("token", data.token);               
-  localStorage.setItem("XF-session-token",data.session.session_token);  
-               
-  // localStorage.setItem("user", data.user);    
-  localStorage.setItem("user", JSON.stringify(data.user));
-  localStorage.setItem("user_id", data.session.user_id);           
-  localStorage.setItem("user_type", data.user_type);       
+        // Save data in localStorage
+        localStorage.setItem("token", data.token);               
+        localStorage.setItem("XF-session-token", data.session.session_token);  
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("user_id", data.session.user_id);           
+        localStorage.setItem("user_type", data.user_type);       
 
-   console.log('user',data.user);  
+        // Update auth context
+        login(data.user);
 
   Swal.fire({
     icon: "success",
@@ -42,11 +42,14 @@ const Login = () => {
      customClass: {
     confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
   },
-    // timer: 1500,
+    timer: 1500,
     showConfirmButton: false,
   });
 
-        setTimeout(() => navigate("/dashboard"), 1600);
+        // Navigate after a short delay
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1600);
       } else {
         switch (res.status) {
           case 401:

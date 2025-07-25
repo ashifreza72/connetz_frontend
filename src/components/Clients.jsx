@@ -13,16 +13,19 @@ console.log("API CALL TO:", `${process.env.REACT_APP_BASE_API}/api/dashboard`);
 
 
 const tabApiMap = {
-  "All Clients": `${process.env.REACT_APP_BASE_API}/api/dashboard`,
-  "Uncontacted": `${process.env.REACT_APP_BASE_API}/api/clients/uncontacted`,
-  "Follow Ups": `${process.env.REACT_APP_BASE_API}/api/clients/follow-ups`,
-  "Recently Viewed Content": `${process.env.REACT_APP_BASE_API}/api/clients/recently-viewed`,
+  "All Clients": "http://192.168.1.57:8000/api/dashboard",
+  "UnDailed": "http://192.168.1.57:8000/api/app/is_contacted",
+  "Overdue": "http://192.168.1.57:8000/api/app/overdue",
+  "Follow Ups": "http://192.168.1.57:8000/api/app/follow_up",
+  "Today Appointment": "http://192.168.1.57:8000/api/app/today_apt"
 };
 
 
 
 
 const Clients = () => {
+
+ const navigate = useNavigate();
    const { user, loading: authLoading } = useAuth();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +38,7 @@ const Clients = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState("");
-
+   
 
  
    useEffect(() => {
@@ -45,67 +48,84 @@ const Clients = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      // const user_id = 10;
       const user_type = localStorage.getItem("user_type");
       const userData = JSON.parse(localStorage.getItem("user"));
-      const user_id = userData?.id
-    // console.log(user_id)
-   
-      if (!token) {
-        // Swal.fire("Unauthorized", "Please login again.", "warning");
-         Swal.fire({
-    title: "Unauthorized",
-    text: "Please login again.",
-    icon: "warning",
-    customClass: {
-      confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
-    },
-  });
-        return;
+      const user_id = userData?.id;
+
+      console.log('Current active tab:', activeTab);
+      console.log('API URL:', tabApiMap[activeTab]);
+      console.log('Token:', token);
+      console.log('User ID:', user_id);
+
+      if (!token || !user_id) {
+        throw new Error("Authentication credentials missing");
       }
 
-      const res = await fetch(tabApiMap[activeTab], {
+      const response = await fetch(tabApiMap[activeTab], {
+        method: 'GET',
         headers: {
-          "XF-token": `${token}`,
-          "user_id": `${user_id}`,
-          "user_type": `${user_type}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'XF-token': token,
+          'user_id': user_id.toString(),
+          'user_type': user_type || '',
         },
       });
 
-      const data = await res.json();
-      console.log('now',data)
-      console.log("Fetched client data:", data);
+    
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        if (errorResponse.message === "Invalid or expired token.") {
+          navigate("/login");
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      if (res.ok && data.data?.leads) {
-        const clientList = Array.isArray(data.data.leads)
-          ? data.data.leads
-          : Array.isArray(data.data.leads?.clients)
-          ? data.data.leads.clients
-          : [];
+     
 
-        setClients(clientList);
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response");
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      if (data.status === "success" || data.status === true) {
+        let clientList = [];
+        
+        if (data.data?.leads) {
+          clientList = Array.isArray(data.data.leads) 
+            ? data.data.leads 
+            : data.data.leads.clients || [];
+        } else if (data.data?.clients) {
+          clientList = data.data.clients;
+        } else if (Array.isArray(data.data)) {
+          clientList = data.data;
+        }
+
+        console.log('Processed client list:', clientList);
+        setClients(clientList || []);
         setCurrentPage(1);
       } else {
-        // Swal.fire("Error", data.message || "Failed to fetch clients", "error")
-         Swal.fire({
-    title: "Unauthorized",
-    text: "Please login again.",
-    icon: "warning",
-    customClass: {
-      confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
-    },
-  });
+        throw new Error(data.message || "Failed to fetch clients");
       }
     } catch (err) {
-      // Swal.fire("Error", "Network error. Please try again later.", "error");
-       Swal.fire({
-    title: "Unauthorized",
-    text: "Please login again.",
-    icon: "warning",
-    customClass: {
-      confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
-    },
-  });
+      console.error('Error details:', {
+        message: err.message,
+        activeTab,
+        apiUrl: tabApiMap[activeTab]
+      });
+      
+      setClients([]);
+      Swal.fire({
+        title: "Error",
+        text: err.message || "Failed to fetch clients. Please try again.",
+        icon: "error",
+        customClass: {
+          confirmButton: 'bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600',
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -134,7 +154,7 @@ const stringToColor = (str) => {
     }
   };
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
 //   const handleRowClick = (client) => {
 //  navigate("/client-details", { state: { clientId: client.id } });
@@ -183,14 +203,14 @@ const handleRowClick = (client) => {
 
         
   return (
-    <div className="p-1 mx-9">
+    <div className="p-0 lg:p-1 lg:mx-28">
       {/* 🔘 Top Bar */}
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex justify-between items-center mb-2 px-2 lg:px-0">
         <h1 className="text-2xl font-bold">Clients</h1>
       
        <button
           onClick={() => setModalOpen(true)}
-          className="bg-[#164ec8] hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-3xl shadow-[0_4px_12px_rgba(115,103,240,0.5)] flex items-center gap-2"
+          className="bg-[#164ec8] hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-3xl shadow-[0_4px_12px_rgba(115,103,240,0.5)] flex items-center justify-between gap-2"
           >
           <img src={addIcon} alt="Add" className="w-5 h-5" />
           ADD CLIENT
@@ -198,7 +218,7 @@ const handleRowClick = (client) => {
       </div>
 
       {/* 📋 Custom Table */}
-      <div className="bg-white shadow rounded-lg overflow-x-auto">
+      <div className="bg-white shadow rounded-lg overflow-x-auto mx-0">
         {/* 🧭 Tabs */}
         <div className="flex items-center space-x-4 mb-3 bg-white p-4 rounded">
           {tabs.map((tab, index) => (
@@ -214,7 +234,7 @@ const handleRowClick = (client) => {
                 <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-3">
               <span
-                className={`w-10 h-10 flex items-center justify-center rounded-md text-sm font-bold border ${
+                className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-bold border ${
                   activeTab === tab.label
                     ? " text-white bg-[#164ec8]"
                     : "border-gray-300 text-gray-600 bg-white"
@@ -291,145 +311,156 @@ const handleRowClick = (client) => {
 
 
         {/* 📄 Table */}
-        <table className="min-w-full table-auto border-separate [border-spacing:0_10px] text-[14px]">
-          <thead className="align-bottom border-0 border-solid border-inherit">
-            <tr>
-              <th className="w-[15%] px-12 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
-                Name
-              </th>
-              <th className="w-[40%] px-5 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
-                Details
-              </th>
-              <th className="w-[10%] px-5 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
-                Last Activity
-              </th>
-              <th className="w-[10%] px-4 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
-                Date Added
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-           {currentClients.map((client, idx) => (
-           <tr
-              key={client.id || idx}
-              onClick={() => handleRowClick(client)}
-              
-              className="hover:bg-gray-100 bg-white cursor-pointer transition-all duration-200 shadow-[inset_0_0_0_9999px_var(--tw-bg-opacity)]"
-            >
-
-          
-
-          <td
-  className={`px-6 py-[0.252rem] text-[.9375rem] font-semibold border-b flex items-center whitespace-nowrap`}
->
-  <div
-    className={`w-8 h-8 rounded-full mr-3 flex items-center justify-center text-white font-bold`}
-    style={{
-      backgroundColor:
-        client.is_contacted === "false"
-          ? "#ec4899" // Tailwind's pink-500 hex
-          : stringToColor(client.name || "-"),
-    }}
-  >
-    {client.is_contacted === "false" ? (
-      <FaPhoneSlash className="text-white text-sm" />
-      // <FaSnowflake  className="text-white text-sm" />
-    ) : (
-      client.name?.charAt(0).toUpperCase()
-    )}
-  </div>
-  <span
-    className={`${
-      client.is_contacted === "false" ? "text-pink-500" : "text-black"
-    }`}
-  >
-    {client.name || "-"}
-  </span>
-</td>
-
-
-
-            <td
-  className={`px-5 py-[0.252rem] text-[.9375rem] text-black font-semibold border-b max-w-[300px] truncate ${
-    client.is_contacted === "false" ? "text-pink-500" : "bg-white"
-  }`}
->
-  {client.campaign?.length > 100
-    ? client.campaign.slice(0, 100) + "..."
-    : client.campaign || "-"}
-</td>
-
-<td
-  className={`px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap ${
-    client.is_contacted === "false" ? "text-pink-500" : "bg-white"
-  }`}
->
-  {client.date
-    ? new Date(client.date).toLocaleString(undefined, {
-        dateStyle: "medium",
-      })
-    : "-"}
-</td>
-
-<td
-  className={`px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap ${
-    client.is_contacted === "false" ? "text-pink-500" : "bg-white"
-  }`}
->
-  {client.created_at
-    ? new Date(client.created_at).toLocaleString(undefined, {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
-    : "-"}
-</td>
-
-            </tr>
-           ))}
-          </tbody>
-
-        </table>
-
-        {/* Pagination */}
-        {!loading && (
-          <div className="flex items-center justify-between mt-1 px-4 pb-2">
-            <p className="text-sm text-gray-500">
-              Showing {indexOfFirstEntry + 1} to{" "}
-              {Math.min(indexOfLastEntry, filteredClients.length)} of {filteredClients.length} entries
-            </p>
-
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-2 py-1 rounded bg-gray-100 text-gray-600 disabled:opacity-50"
-              >
-                &lt;
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === i + 1
-                      ? "bg-[#164ec8] text-white"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-2 py-1 rounded bg-gray-100 text-gray-600 disabled:opacity-50"
-              >
-                &gt;
-              </button>
-            </div>
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#164ec8] mx-auto"></div>
+            <p className="mt-2 text-gray-500">Loading clients...</p>
           </div>
+        ) : clients.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No clients found</p>
+          </div>
+        ) : (
+          <>
+            <table className="min-w-full table-auto border-separate [border-spacing:0_10px] text-[14px]">
+              <thead className="align-bottom border-0 border-solid border-inherit">
+                <tr>
+                  <th className="w-[15%] px-12 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
+                    Name
+                  </th>
+                  <th className="w-[40%] px-5 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
+                    Details
+                  </th>
+                  <th className="w-[10%] px-5 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
+                    Last Activity
+                  </th>
+                  <th className="w-[10%] px-4 text-start py-[1.051rem] text-[#384551] text-[14.5px] uppercase font-semibold bg-white border-t border-b">
+                    Date Added
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentClients.map((client, idx) => (
+                  <tr
+                    key={client.id || idx}
+                    onClick={() => handleRowClick(client)}
+                    className="hover:bg-gray-100 bg-white cursor-pointer transition-all duration-200 shadow-[inset_0_0_0_9999px_var(--tw-bg-opacity)]"
+                  >
+                    <td className="px-6 py-[0.252rem] text-[.9375rem] font-semibold border-b flex items-center whitespace-nowrap">
+                      <div
+                        className="w-8 h-8 rounded-full mr-3 flex items-center justify-center text-white font-bold"
+                        style={{
+                          backgroundColor:
+                            client.is_contacted === "false"
+                              ? "#ec4899"
+                              : stringToColor(client.name || "-"),
+                        }}
+                      >
+                        {client.is_contacted === "false" ? (
+                          <FaPhoneSlash className="text-white text-sm" />
+                        ) : (
+                          (client.name || "-").charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <span
+                        className={
+                          client.is_contacted === "false"
+                            ? "text-pink-500"
+                            : "text-black"
+                        }
+                      >
+                        {client.name || "-"}
+                      </span>
+                    </td>
+
+                    <td
+                      className={`px-5 py-[0.252rem] text-[.9375rem] text-black font-semibold border-b max-w-[300px] truncate ${
+                        client.is_contacted === "false"
+                          ? "text-pink-500"
+                          : "bg-white"
+                      }`}
+                    >
+                      {client.campaign || client.details || "-"}
+                    </td>
+
+                    <td
+                      className={`px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap ${
+                        client.is_contacted === "false"
+                          ? "text-pink-500"
+                          : "bg-white"
+                      }`}
+                    >
+                      {client.last_activity || client.date
+                        ? new Date(
+                            client.last_activity || client.date
+                          ).toLocaleString(undefined, {
+                            dateStyle: "medium",
+                          })
+                        : "-"}
+                    </td>
+
+                    <td
+                      className={`px-5 py-[0.252rem] text-[.9375rem] text-black border-b font-semibold whitespace-nowrap ${
+                        client.is_contacted === "false"
+                          ? "text-pink-500"
+                          : "bg-white"
+                      }`}
+                    >
+                      {client.created_at
+                        ? new Date(client.created_at).toLocaleString(undefined, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            {clients.length > 0 && (
+              <div className="flex items-center justify-between mt-1 px-4 pb-2">
+                <p className="text-sm text-gray-500">
+                  Showing {indexOfFirstEntry + 1} to{" "}
+                  {Math.min(indexOfLastEntry, filteredClients.length)} of{" "}
+                  {filteredClients.length} entries
+                </p>
+
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-2 py-1 rounded bg-gray-100 text-gray-600 disabled:opacity-50"
+                  >
+                    &lt;
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => handlePageChange(i + 1)}
+                      className={`px-2 py-1 rounded ${
+                        currentPage === i + 1
+                          ? "bg-[#164ec8] text-white"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-2 py-1 rounded bg-gray-100 text-gray-600 disabled:opacity-50"
+                  >
+                    &gt;
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

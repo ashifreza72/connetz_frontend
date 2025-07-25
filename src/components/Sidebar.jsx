@@ -20,14 +20,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const [isTeamOpen, setIsTeamOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  // const [isCollapsed, setIsCollapsed] = useState(false);
-  // const [isCollapsed, setIsCollapsed] = useState(true);
-
-  const [isCollapsed, setIsCollapsed] = useState(true);  // manual toggle
-const [isHovered, setIsHovered] = useState(false);      // hover tracking
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
 
   const isSidebarCollapsed = isCollapsed && !isHovered;
-
+  
 
   const handleLogout = async () => {
     console.log("Logout response:", handleLogout);
@@ -69,19 +66,18 @@ const [isHovered, setIsHovered] = useState(false);      // hover tracking
   };
 
   return (
-    <>
     <div className="relative">
       {/* Floating Collapse/Expand Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="hidden md:block fixed top-11 left-[250px] transform -translate-y-1/2 z-[100] bg-white rounded-full shadow-lg p-1.5 border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all duration-300"
+        className="hidden md:block fixed top-9 left-[250px] transform -translate-y-1/2 z-[100] bg-[#f7f5f5] rounded-full shadow-lg p-1 border border-[#f7f5f5] hover:bg-gray-50 cursor-pointer transition-all duration-300"
         style={{ 
           left: isSidebarCollapsed ? "82px" : "250px"
         }}
       >
-        <div className="bg-[#164ec8] text-white rounded-full p-1.5 cursor-pointer">
+        <div className="bg-[#164ec8] text-white rounded-full p-1">
           <FaChevronLeft
-            className={`transition-transform duration-200 ${isSidebarCollapsed ? "rotate-180" : ""} cursor-pointer`}
+            className={`transition-transform duration-200 ${isSidebarCollapsed ? "rotate-180" : ""}`}
             size={16}
           />
         </div>
@@ -92,116 +88,133 @@ const [isHovered, setIsHovered] = useState(false);      // hover tracking
         onMouseLeave={() => setIsHovered(false)}
         style={{ width: isSidebarCollapsed ? "98px" : "262px" }}
         className={`
-          fixed top-0 left-0 h-full bg-white shadow-md px-5 z-40 transform
-          transition-[width] duration-300 ease-in-out overflow-y-auto overflow-x-hidden
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 md:static md:flex
-          [&::-webkit-scrollbar]:w-2
+          fixed top-0 left-0 h-full bg-white shadow-md z-40 transform
+          transition-[width] duration-300 ease-in-out
+          ${isOpen ? "translate-x-0 overflow-y-auto" : "-translate-x-full"}
+          md:translate-x-0 md:static md:flex md:flex-col md:h-full md:overflow-visible
+        `}
+      >
+        {/* Fixed Header Section */}
+        <div className="flex-shrink-0 px-5 pt-3 sticky top-0 bg-white z-10">
+          {/* Mobile Close Button */}
+          <div className="md:hidden flex justify-end mb-4">
+            <button onClick={toggleSidebar}>
+              <IoClose className="text-2xl text-[#384551]" />
+            </button>
+          </div>
+
+          {/* Logo */}
+          <div className={`flex items-center ${isCollapsed ? "justify-start" : "justify-start"} ml-1 mb-8`}>
+            <img
+              src={isSidebarCollapsed ? logoIcon : logoFull}
+              alt="Logo"
+              className="h-10 transition-all duration-300"
+            />
+          </div>
+        </div>
+
+        {/* Scrollable Navigation Section */}
+        <div className="flex-1 px-5 
+          [&::-webkit-scrollbar]:w-1
           [&::-webkit-scrollbar-track]:bg-transparent
           [&::-webkit-scrollbar-thumb]:bg-gray-300
           [&::-webkit-scrollbar-thumb]:rounded-full
           [&::-webkit-scrollbar-thumb]:hover:bg-gray-400
-          scroll-smooth
-        `}
-      >
-        {/* Mobile Close Button */}
-        <div className="md:hidden flex justify-end mb-4">
-          <button onClick={toggleSidebar}>
-            <IoClose className="text-2xl text-[#384551]" />
-          </button>
-        </div>
+          scroll-smooth"
+        >
+          <nav className="flex flex-col gap-2 text-[15px] text-[#384551] pb-8">
+            {/* Navigation Items */}
+            <NavItem icon={<FaHome />} label="Dashboard" to="/dashboard" collapsed={isSidebarCollapsed} />
 
-        <div className="flex pt-3 text-left flex-col justify-between h-full">
-          <div>
-            <div className={`flex items-center ${isCollapsed ? "justify-start" : "justify-start"} ml-1 mb-8`}>
-              <img
-                src={isSidebarCollapsed ? logoIcon : logoFull}
-                alt="Logo"
-                className="h-10 transition-all duration-300"
-              />
+            {/* Team Dropdown */}
+            <div>
+              <button
+                onClick={() => setIsTeamOpen(!isTeamOpen)}
+                className="flex items-center justify-between w-full px-5 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[15px] min-h-[2.625rem]"
+              >
+                <span className="flex items-center gap-3 px-3">
+                  <FaUsers />
+                  {!isSidebarCollapsed && <span>Team</span>}
+                </span>
+                {!isSidebarCollapsed && (
+                  <FaChevronRight 
+                    size={14} 
+                    className={`transform transition-transform duration-300 ${isTeamOpen ? 'rotate-90' : ''}`}
+                  />
+                )}
+              </button>
+
+              <div 
+                className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                  !isSidebarCollapsed ? (isTeamOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0') : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="ml-1 pt-1 flex flex-col gap-1 text-[15px] text-[#384551]">
+                  <NavItem icon={<FaUser />} label="Team Leader" to="/team/leader" collapsed={isSidebarCollapsed} />
+                  <NavItem icon={<FaUser />} label="Staff" to="/team/staff" collapsed={isSidebarCollapsed} />
+                </div>
+              </div>
             </div>
 
-            {/* Rest of the navigation */}
-            <nav className="flex flex-col gap-5 text-[15px] text-[#384551] pb-8">
-  {/* Top Section */}
-  <NavItem icon={<FaHome />} label="Dashboard" to="/dashboard" collapsed={isSidebarCollapsed} />
+            {/* Other Main Items */}
+            <NavItem icon={<FaCogs />} label="Integration" to="/integration" collapsed={isSidebarCollapsed} />
+            <NavItem icon={<FaFileInvoice />} label="Subscription" to="/subscription" collapsed={isSidebarCollapsed} />
+            <NavItem icon={<FaFileInvoice />} label="Billing" to="/billing" collapsed={isSidebarCollapsed} />
 
-  {/* Team Dropdown */}
-  <div>
-    <button
-      onClick={() => setIsTeamOpen(!isTeamOpen)}
-      className="flex items-center justify-between w-full px-5 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[15px] min-h-[2.625rem]"
-    >
-      <span className="flex items-center gap-3 px-3">
-        <FaUsers />
-        {!isSidebarCollapsed && <span>Team</span>}
-      </span>
-      {!isSidebarCollapsed && (
-        isTeamOpen ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />
-      )}
-    </button>
+            {/* Section Title */}
+            {!isSidebarCollapsed && (
+              <div className="mt-2 text-sm font-medium text-gray-400 px-5 uppercase tracking-wide">Apps & Pages</div>
+            )}
 
-    {isTeamOpen && !isSidebarCollapsed && (
-      <div className="ml-1 mt-1 flex flex-col gap-1 text-[15px] text-[#384551]">
-        <NavItem icon={<FaUser />} label="Team Leader" to="/team/leader" collapsed={isSidebarCollapsed} />
-        <NavItem icon={<FaUser />} label="Staff" to="/team/staff" collapsed={isSidebarCollapsed} />
-      </div>
-    )}
-  </div>
+            {/* Apps & Pages Section */}
+            <NavItem icon={<FaUser />} label="My Profile" to="/profile" collapsed={isSidebarCollapsed} />
 
-  {/* Other Main Items */}
-  <NavItem icon={<FaCogs />} label="Integration" to="/integration" collapsed={isSidebarCollapsed} />
-  <NavItem icon={<FaFileInvoice />} label="Subscription" to="/subscription" collapsed={isSidebarCollapsed} />
-  <NavItem icon={<FaFileInvoice />} label="Billing" to="/billing" collapsed={isSidebarCollapsed} />
+            {/* Settings Dropdown */}
+            <div>
+              <button
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                className="flex items-center justify-between w-full px-5 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[.9375rem]"
+              >
+                <span className="flex items-center gap-3 px-3">
+                  <FaCogs className="text-[.9375rem]" />
+                  {!isSidebarCollapsed && <span>Settings</span>}
+                </span>
+                {!isSidebarCollapsed && (
+                  <FaChevronRight 
+                    size={14} 
+                    className={`transform transition-transform duration-300 ${isSettingsOpen ? 'rotate-90' : ''}`}
+                  />
+                )}
+              </button>
 
-  {/* Section Title */}
-  {!isSidebarCollapsed && (
-    <div className="mt-6 text-sm font-medium text-gray-400 px-5 uppercase tracking-wide">Apps & Pages</div>
-  )}
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  !isSidebarCollapsed ? (isSettingsOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0') : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="ml-1 pt-1 flex flex-col gap-1 text-[.9375rem] text-[#384551]">
+                  <NavItem icon={<FaCogs />} label="App Settings" to="/settings/app" collapsed={isSidebarCollapsed} />
+                  <NavItem icon={<FaCogs />} label="API Settings" to="/settings/api" collapsed={isSidebarCollapsed} />
+                </div>
+              </div>
+            </div>
 
-  {/* Apps & Pages Section */}
-  <NavItem icon={<FaUser />} label="My Profile" to="/profile" collapsed={isSidebarCollapsed} />
+            {/* Other Bottom Items */}
+            <NavItem icon={<FaQuestionCircle />} label="User Guide" to="/guide" collapsed={isSidebarCollapsed} />
+            <NavItem icon={<FaComments />} label="Live Chat Support" to="/support" collapsed={isSidebarCollapsed} />
 
-  {/* Settings Dropdown */}
-  <div>
-    <button
-      onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-      className="flex items-center justify-between w-full px-5 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[.9375rem]"
-    >
-      <span className="flex items-center gap-3 px-3">
-        <FaCogs className="text-[.9375rem]" />
-        {!isSidebarCollapsed && <span>Settings</span>}
-      </span>
-      {!isSidebarCollapsed && (isSettingsOpen ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />)}
-    </button>
-
-    {isSettingsOpen && !isSidebarCollapsed && (
-      <div className="ml-1 mt-1 flex flex-col gap-1 text-[.9375rem] text-[#384551]">
-        <NavItem icon={<FaCogs />} label="App Settings" to="/settings/app" collapsed={isSidebarCollapsed} />
-        <NavItem icon={<FaCogs />} label="API Settings" to="/settings/api" collapsed={isSidebarCollapsed} />
-      </div>
-    )}
-  </div>
-
-  {/* Other Bottom Items */}
-  <NavItem icon={<FaQuestionCircle />} label="User Guide" to="/guide" collapsed={isSidebarCollapsed} />
-  <NavItem icon={<FaComments />} label="Live Chat Support" to="/support" collapsed={isSidebarCollapsed} />
-
-  {/* Logout Item */}
-  <li
-    onClick={handleLogout}
-    className="flex items-center ml-8 space-x-2 hover:text-red-600 cursor-pointer"
-  >
-    <FaPowerOff />
-    {!isSidebarCollapsed && <span>Log Out</span>}
-  </li>
-</nav>
-
-          </div>
+            {/* Logout Item */}
+            <li
+              onClick={handleLogout}
+              className="flex items-center ml-8 space-x-2 hover:text-red-600 cursor-pointer"
+            >
+              <FaPowerOff />
+              {!isSidebarCollapsed && <span>Log Out</span>}
+            </li>
+          </nav>
         </div>
       </aside>
     </div>
-    </>
   );
 };
 
@@ -211,8 +224,8 @@ const NavItem = ({ icon, label, to, collapsed = false }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `flex items-center justify-between w-full px-8 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[15px] min-h-[2.625rem] transition-all duration-300
-      ${isActive ? "bg-indigo-100 text-[#164ec8] font-medium" : ""}`
+      `flex items-center justify-between w-full px-8 py-2 rounded-md hover:bg-gray-100 text-[#384551] text-[15px] min-h-[2.625rem] transition-all duration-300 
+      ${isActive ? "bg-indigo-100 shadow-sm text-blue-700 font-medium" : ""}`
     }
   >
     {/* Left: Icon + Label (gap-5) */}
